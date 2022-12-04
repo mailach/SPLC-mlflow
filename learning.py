@@ -50,7 +50,6 @@ def _get_params(context):
         .replace("False", "false")
         for arg in context.args
     ]
-    logging.error(params)
     params = {p.split("=")[0]: p.split("=")[1] for p in params}
     return params
 
