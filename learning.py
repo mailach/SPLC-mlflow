@@ -1,4 +1,5 @@
 import sys
+import os
 from caching import CacheHandler
 import pandas as pd
 from rich.logging import RichHandler
@@ -42,69 +43,11 @@ def _predict_on_test(learner, test_x: pd.DataFrame, test_y: pd.Series):
     return prediction
 
 
-##############################################################################
-
-
-def _extract_parameters(params, method, param_dict):
-    """returns parameters needed for method"""
-    try:
-        return (
-            {p: params[p] for p in param_dict[method]
-             } if method in param_dict else {}
-        )
-    except KeyError as k_err:
-        logging.error(
-            "To run method %s you need to specify parameter %s=",
-            method,
-            k_err.args[0],
-        )
-        sys.exit(1)
-
-
 def _get_params(context):
     params = [arg.replace("--", "").replace("_", "-").replace("True",
                                                               "true").replace("False", "false") for arg in context.args]
     params = {p.split("=")[0]: p.split("=")[1] for p in params}
-    # params = [
-    #     "lossFunction",  # LEASTSQUARES, ABSOLUTE
-    #     "epsilon",
-    #     "parallelization",
-    #     "bagging",
-    #     "baggingNumbers",
-    #     "baggingTestDataFraction",
-    #     "useBackward",
-    #     "abortError",
-    #     "limitFeatureSize",
-    #     "featureSizeThreshold",
-    #     "quadraticFunctionSupport",
-    #     "crossValidation",
-    #     "learn-logFunction",
-    #     "learn-accumulatedLogFunction",
-    #     "learn-asymFunction",
-    #     "learn-ratioFunction",
-    #     "learn-mirrowedFunction",
-    #     "numberOfRounds",
-    #     "backwardErrorDelta",
-    #     "minImprovementPerRound",
-    #     "withHierarchy",
-    #     "bruteForceCandidates",
-    #     "ignoreBadFeatures",
-    #     "stopOnLongRound",
-    #     "candidateSizePenalty",
-    #     "learnTimeLimit",
-    #     "scoreMeasure",
-    #     "learn-numericdisabled",
-    # ]
-
     return params
-
-
-def _split_dataset_by_samples(data, samples):
-    data = data.merge(samples, on=list(samples.columns),
-                      how="left", indicator=True)
-    train = data[data["_merge"] == "both"].drop("_merge", axis=1)
-    test = data[data["_merge"] == "left_only"].drop("_merge", axis=1)
-    return train, test
 
 
 @click.command(
