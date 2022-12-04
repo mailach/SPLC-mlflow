@@ -1,0 +1,49 @@
+name: splc-sampling
+docker_env:
+  image: mailach/splc2py:latest
+  environment:
+    [
+      "MLFLOW_TRACKING_URI",
+      "MLFLOW_TRACKING_USERNAME",
+      "MLFLOW_TRACKING_PASSWORD",
+    ]
+entry_points:
+  sampling:
+    parameters:
+      system_run_id: { type: string }
+      binary_method: { type: string }
+      numeric_method: { type: string, default: None }
+    command: "python3 sampling.py --system_run_id={system_run_id} --binary_method={binary_method} --numeric_method={numeric_method}"
+  learning:
+    parameters:
+      sampling_run_id: { type: string }
+      nfp: { type: string }
+      lossFunction: { type: string, default: "RELATIVE"} # LEASTSQUARES, ABSOLUTE
+      epsilon: {type: int, default: 0}
+      parallelization: {type: bool, default: True}
+      bagging: {type: bool, default: False}
+      baggingNumbers: {type: int, default: 100}
+      baggingTestDataFraction: {type: int, default: 50}
+      useBackward: {type: int, default: 50}
+      abortError: {type: float, default: 1}
+      limitFeatureSize: {type: bool, default: False}
+      featureSizeThreshold: {type: int, default: 4}
+      quadraticFunctionSupport: {type: bool, default: True}
+      crossValidation: {type: bool, default: False}
+      learn-logFunction: {type: bool, default: False}
+      learn-accumulatedLogFunction: {type: bool, default: False}
+      learn-asymFunction: {type: bool, default: False}
+      learn-ratioFunction: {type: bool, default: False}
+      learn-mirrowedFunction: {type: bool, default: False}
+      numberOfRounds: {type: int, default: 70}
+      backwardErrorDelta: {type: float, default: 1}
+      minImprovementPerRound: {type: float, default: 0.1}
+      withHierarchy: {type: bool, default: False}
+      bruteForceCandidates: {type: bool, default: False}
+      ignoreBadFeatures: {type: bool, default: False}
+      stopOnLongRound: {type: bool, default: True}
+      candidateSizePenalty: {type: bool, default: True}
+      learnTimeLimit: {type: string, default: 0}
+      scoreMeasure: {type: string, default: "RELERROR"} #INFLUENCE
+      learn-numeric-disabled: {type: bool, default: True}  
+    command: "python3 learning.py --sampling_run_id={sampling_run_id} --nfp={nfp} --lossFunction={lossFunction} --epsilon={epsilon} --parallelization={parallelization} --bagging={bagging} --baggingNumbers={baggingNumbers} --baggingTestDataFraction={baggingTestDataFraction} --useBackward={useBackward} --abortError={abortError} --limitFeatureSize={limitFeatureSize} --featureSizeThreshold={featureSizeThreshold} --quadraticFunctionSupport={quadraticFunctionSupport} --crossValidation={crossValidation} --learn-logFunction={learn-logFunction} --learn-accumulatedLogFunction={learn-accumulatedLogFunction} --learn-asymFunction={learn-asymFunction} --learn-ratioFunction={learn-ratioFunction} --learn-mirrowedFunction={learn-mirrowedFunction} --numberOfRounds={numberOfRounds} --backwardErrorDelta={backwardErrorDelta} --minImprovementPerRound={minImprovementPerRound} --withHierarchy={withHierarchy} --bruteForceCandidates={bruteForceCandidates} --ignoreBadFeatures={ignoreBadFeatures} --stopOnLongRound={stopOnLongRound} --candidateSizePenalty={candidateSizePenalty} --learnTimeLimit={learnTimeLimit} --scoreMeasure={scoreMeasure} --learn-numeric-disabled={learn-numeric-disabled}"
