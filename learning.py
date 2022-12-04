@@ -27,8 +27,7 @@ def activate_logging(logs_to_artifact):
 def _load_data(data_file: str, cache: CacheHandler, nfp: str):
     data = cache.retrieve(data_file)
     nfp = "nfp_" + nfp
-    columns_to_drop = [
-        col for col in data.columns if "nfp_" in col and col != nfp]
+    columns_to_drop = [col for col in data.columns if "nfp_" in col and col != nfp]
     data = data.drop(columns_to_drop, axis=1)
     Y = data[nfp]
     X = data.drop(nfp, axis=1)
@@ -44,8 +43,14 @@ def _predict_on_test(learner, test_x: pd.DataFrame, test_y: pd.Series):
 
 
 def _get_params(context):
-    params = [arg.replace("--", "").replace("_", "-").replace("True",
-                                                              "true").replace("False", "false") for arg in context.args]
+    params = [
+        arg.replace("--", "")
+        .replace("_", "-")
+        .replace("True", "true")
+        .replace("False", "false")
+        for arg in context.args
+    ]
+    logging.error(params)
     params = {p.split("=")[0]: p.split("=")[1] for p in params}
     return params
 
@@ -61,12 +66,7 @@ def _get_params(context):
 @click.option("--nfp")
 @click.option("--logs_to_artifact", type=bool, default=False)
 @click.pass_context
-def learn(
-    context,
-    sampling_run_id,
-    nfp,
-    logs_to_artifact
-):
+def learn(context, sampling_run_id, nfp, logs_to_artifact):
     activate_logging(logs_to_artifact)
     ml_params = _get_params(context)
     sampling_cache = CacheHandler(sampling_run_id, new_run=False)
@@ -83,8 +83,7 @@ def learn(
         logging.info("Predict test set and save to cache.")
         prediction = _predict_on_test(model, test_x, test_y)
         model_cache.save({"predicted.tsv": prediction})
-        mlflow.log_artifact(os.path.join(
-            model_cache.cache_dir, "predicted.tsv"), "")
+        mlflow.log_artifact(os.path.join(model_cache.cache_dir, "predicted.tsv"), "")
         if logs_to_artifact:
             mlflow.log_artifact("logs.txt", "")
 
