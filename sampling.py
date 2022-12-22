@@ -27,8 +27,7 @@ def _extract_parameters(params, method, param_dict):
     """returns parameters needed for method"""
     try:
         return (
-            {p: params[p] for p in param_dict[method]
-             } if method in param_dict else {}
+            {p: params[p] for p in param_dict[method]} if method in param_dict else {}
         )
     except KeyError as k_err:
         logging.error(
@@ -39,9 +38,8 @@ def _extract_parameters(params, method, param_dict):
         sys.exit(1)
 
 
-def _sampling_params(context, bin_method: str, num_method: str = None):
-    params = [arg.replace("--") for arg in context.args]
-    params = {p.split("=")[0]: p.split("=")[1] for p in params}
+def _sampling_params(local_vars, bin_method: str, num_method: str = None):
+    samp_params = {}
     param_dict = {
         "random": ["sampleSize", "seed"],
         "hypersampling": ["precision"],
@@ -51,55 +49,53 @@ def _sampling_params(context, bin_method: str, num_method: str = None):
         "twise": ["t"],
         "distancebased": ["optionWeight", "numConfigs"],
     }
-
-    samp_params = _extract_parameters(params, bin_method, param_dict)
-    samp_params.update(_extract_parameters(params, num_method, param_dict))
+    if num_method and num_method in param_dict:
+        samp_params.update(
+            {param: local_vars[param.lower()] for param in param_dict[num_method]}
+        )
+    if bin_method in param_dict:
+        samp_params.update(
+            {param: local_vars[param.lower()] for param in param_dict[num_method]}
+        )
 
     return samp_params
 
 
 def _split_dataset_by_samples(data, samples):
-    data = data.merge(samples, on=list(samples.columns),
-                      how="left", indicator=True)
+    data = data.merge(samples, on=list(samples.columns), how="left", indicator=True)
     train = data[data["_merge"] == "both"].drop("_merge", axis=1)
     test = data[data["_merge"] == "left_only"].drop("_merge", axis=1)
     return train, test
 
 
-@click.command(
-    help="Sample using SPLConqueror.",
-    context_settings=dict(
-        ignore_unknown_options=True,
-        allow_extra_args=True,
-    ),
-)
+@click.command(help="Sample using SPLConqueror.")
 @click.option("--system_run_id", required=True)
 @click.option("--binary_method", required=True)
 @click.option("--numeric_method", default=None)
 @click.option("--logs_to_artifact", type=bool, default=False)
-@click.pass_context
-# @click.option("--sampleSize", default=None)
-# @click.option("--seed", default=None)
-# @click.option("--precision", default=None)
-# @click.option("--distinctValuesPerOption", default=None)
-# @click.option("--measurements", default=None)
-# @click.option("--k", default=None)
-# @click.option("--t", default=None)
-# @click.option("--optionWeight", default=None)
-# @click.option("--numConfigs", default=None)
+@click.option("--samplesize", default=None)
+@click.option("--seed", default=None)
+@click.option("--precision", default=None)
+@click.option("--distinctvaluesperoption", default=None)
+@click.option("--measurements", default=None)
+@click.option("--k", default=None)
+@click.option("--t", default=None)
+@click.option("--level", default=None)
+@click.option("--optionWeight", default=None)
+@click.option("--numConfigs", default=None)
 def sample(
-    context,
     system_run_id: str,
     binary_method: str,
-    # sampleSize: int,
-    # seed: int,
-    # precision: int,
-    # distinctValuesPerOption: int,
-    # measurements: int,
-    # k: int,
-    # t: int,
-    # optionWeight: int,
-    # numConfigs: int,
+    samplesize: int,
+    seed: int,
+    level: int,
+    precision: int,
+    distinctvaluesperoption: int,
+    measurements: int,
+    k: int,
+    t: int,
+    optionweight: int,
+    numconfigs: int,
     numeric_method: str = None,
     logs_to_artifact: bool = False,
 ):
@@ -123,38 +119,46 @@ def sample(
     feature_model = system_cache.retrieve("fm.xml")
     data = system_cache.retrieve("measurements.tsv")
 
-    params = _sampling_params(context, binary_method, numeric_method)
+    params = _sampling_params(locals(), binary_method, numeric_method)
     sampler = Sampler(feature_model, backend="local")
 
     with mlflow.start_run() as run:
-        sampling_cache = CacheHandler(run.info.run_id)
+        try:
+            sampling_cache = CacheHandler(run.info.run_id)
 
-        if not numeric_method:
-            samples = pd.DataFrame(
-                sampler.sample(binary_method, formatting="dict", params=params)
-            )
-
-            train, test = _split_dataset_by_samples(data, samples)
-
-        else:
-            samples = pd.DataFrame(
-                sampler.sample(
-                    binary_method, numeric_method, formatting="dict", params=params
+            if not numeric_method:
+                samples = pd.DataFrame(
+                    sampler.sample(binary_method, formatting="dict", params=params)
                 )
-            )
-            train, test = _split_dataset_by_samples(data, samples)
 
-        logging.info("Save sampled configurations to cache")
-        sampling_cache.save(
-            {
-                "train.tsv": train,
-                "test.tsv": test,
-            }
-        )
-        logging.info("Sampling cache dir: %s", sampling_cache.cache_dir)
-        mlflow.log_artifacts(sampling_cache.cache_dir, "")
-        if logs_to_artifact:
-            mlflow.log_artifact("logs.txt", "")
+                train, test = _split_dataset_by_samples(data, samples)
+
+            else:
+                samples = pd.DataFrame(
+                    sampler.sample(
+                        binary_method, numeric_method, formatting="dict", params=params
+                    )
+                )
+
+                train, test = _split_dataset_by_samples(data, samples)
+
+            mlflow.log_param("n_train", len(train))
+            mlflow.log_param("n_sampled", len(samples))
+            logging.info("Save sampled configurations to cache")
+            sampling_cache.save(
+                {
+                    "train.tsv": train,
+                    "test.tsv": test,
+                }
+            )
+            logging.info("Sampling cache dir: %s", sampling_cache.cache_dir)
+            mlflow.log_artifacts(sampling_cache.cache_dir, "")
+        except Exception as e:
+            logging.error("During sampling the following error occured: %s", e)
+
+        finally:
+            if logs_to_artifact:
+                mlflow.log_artifact("logs.txt", "")
 
 
 if __name__ == "__main__":
