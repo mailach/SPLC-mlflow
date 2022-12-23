@@ -67,22 +67,29 @@ def _get_params(context):
 @click.pass_context
 def learn(context, sampling_run_id, nfp, logs_to_artifact):
     activate_logging(logs_to_artifact)
-    ml_params = _get_params(context)
-    sampling_cache = CacheHandler(sampling_run_id, new_run=False)
-    train_x, train_y = _load_data("train.tsv", sampling_cache, nfp)
-    train = pd.concat([train_x, train_y], axis=1)
-    test_x, test_y = _load_data("test.tsv", sampling_cache, nfp)
+    try:
+        ml_params = _get_params(context)
+        sampling_cache = CacheHandler(sampling_run_id, new_run=False)
+        train_x, train_y = _load_data("train.tsv", sampling_cache, nfp)
+        train = pd.concat([train_x, train_y], axis=1)
+        test_x, test_y = _load_data("test.tsv", sampling_cache, nfp)
 
-    with mlflow.start_run() as run:
-        model_cache = CacheHandler(run.info.run_id)
-        logging.info("Use ml settings: %s", ml_params)
-        model = Model("local")
-        model.fit(train, "nfp_" + nfp, ml_params)
-        logging.info("Finished training model")
-        logging.info("Predict test set and save to cache.")
-        prediction = _predict_on_test(model, test_x, test_y)
-        model_cache.save({"predicted.tsv": prediction})
-        mlflow.log_artifact(os.path.join(model_cache.cache_dir, "predicted.tsv"), "")
+        with mlflow.start_run() as run:
+            model_cache = CacheHandler(run.info.run_id)
+            logging.info("Use ml settings: %s", ml_params)
+            model = Model("local")
+            model.fit(train, "nfp_" + nfp, ml_params)
+            logging.info("Finished training model")
+            logging.info("Predict test set and save to cache.")
+            prediction = _predict_on_test(model, test_x, test_y)
+            model_cache.save({"predicted.tsv": prediction})
+            mlflow.log_artifact(
+                os.path.join(model_cache.cache_dir, "predicted.tsv"), ""
+            )
+    except Exception as e:
+        logging.error("During learning the following error occured: %s", e)
+
+    finally:
         if logs_to_artifact:
             mlflow.log_artifact("logs.txt", "")
 
