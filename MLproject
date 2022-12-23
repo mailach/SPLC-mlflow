@@ -1,4 +1,4 @@
-name: splc-sampling
+name: splc
 docker_env:
   image: mailach/splc2py
   environment:
