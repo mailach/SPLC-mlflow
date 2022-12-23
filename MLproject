@@ -23,7 +23,6 @@ entry_points:
       k: { type: int, default: None }
       t: { type: int, default: None }
     command: "python3 sampling.py --system_run_id={system_run_id} --binary_method={binary_method} --numeric_method={numeric_method} --logs_to_artifact={logs_to_artifact} --measurements={measurements} --level={level} --samplesize={sampleSize} --seed={seed} --precision={precision} --distinctvaluesperoption={distinctValuesPerOption} --k={k} --t={t}"
-
   learning:
     parameters:
       sampling_run_id: { type: string }

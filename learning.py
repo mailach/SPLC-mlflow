@@ -67,14 +67,14 @@ def _get_params(context):
 @click.pass_context
 def learn(context, sampling_run_id, nfp, logs_to_artifact):
     activate_logging(logs_to_artifact)
-    try:
-        ml_params = _get_params(context)
-        sampling_cache = CacheHandler(sampling_run_id, new_run=False)
-        train_x, train_y = _load_data("train.tsv", sampling_cache, nfp)
-        train = pd.concat([train_x, train_y], axis=1)
-        test_x, test_y = _load_data("test.tsv", sampling_cache, nfp)
 
-        with mlflow.start_run() as run:
+    ml_params = _get_params(context)
+    sampling_cache = CacheHandler(sampling_run_id, new_run=False)
+    train_x, train_y = _load_data("train.tsv", sampling_cache, nfp)
+    train = pd.concat([train_x, train_y], axis=1)
+    test_x, test_y = _load_data("test.tsv", sampling_cache, nfp)
+    with mlflow.start_run() as run:
+        try:
             model_cache = CacheHandler(run.info.run_id)
             logging.info("Use ml settings: %s", ml_params)
             model = Model("local")
@@ -88,12 +88,12 @@ def learn(context, sampling_run_id, nfp, logs_to_artifact):
             )
             mlflow.log_artifacts(model.artifact_repo, "splc-logs")
             mlflow.log_metric("learning_time", model.learning_time)
-    except Exception as e:
-        logging.error("During learning the following error occured: %s", e)
+        except Exception as e:
+            logging.error("During learning the following error occured: %s", e)
 
-    finally:
-        if logs_to_artifact:
-            mlflow.log_artifact("logs.txt", "")
+        finally:
+            if logs_to_artifact:
+                mlflow.log_artifact("logs.txt", "")
 
 
 if __name__ == "__main__":
