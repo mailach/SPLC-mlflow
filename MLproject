@@ -54,6 +54,6 @@ entry_points:
       stopOnLongRound: { type: bool, default: True }
       candidateSizePenalty: { type: bool, default: True }
       learnTimeLimit: { type: string, default: 0 }
-      scoreMeasure: { type: string, default: "RELERROR" } #INFLUENCE
+      scoreMeasure: { type: string, default: "RELERROR" }
       learn-numeric-disabled: { type: bool, default: True }
     command: "python3 learning.py --sampling_run_id={sampling_run_id} --nfp={nfp} --lossFunction={lossFunction} --epsilon={epsilon} --parallelization={parallelization} --bagging={bagging} --baggingNumbers={baggingNumbers} --baggingTestDataFraction={baggingTestDataFraction} --useBackward={useBackward} --abortError={abortError} --limitFeatureSize={limitFeatureSize} --featureSizeThreshold={featureSizeThreshold} --quadraticFunctionSupport={quadraticFunctionSupport} --crossValidation={crossValidation} --learn-logFunction={learn-logFunction} --learn-accumulatedLogFunction={learn-accumulatedLogFunction} --learn-asymFunction={learn-asymFunction} --learn-ratioFunction={learn-ratioFunction} --learn-mirrowedFunction={learn-mirrowedFunction} --numberOfRounds={numberOfRounds} --backwardErrorDelta={backwardErrorDelta} --minImprovementPerRound={minImprovementPerRound} --withHierarchy={withHierarchy} --bruteForceCandidates={bruteForceCandidates} --ignoreBadFeatures={ignoreBadFeatures} --stopOnLongRound={stopOnLongRound} --candidateSizePenalty={candidateSizePenalty} --learnTimeLimit={learnTimeLimit} --scoreMeasure={scoreMeasure} --learn-numeric-disabled={learn-numeric-disabled}"

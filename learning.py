@@ -86,6 +86,8 @@ def learn(context, sampling_run_id, nfp, logs_to_artifact):
             mlflow.log_artifact(
                 os.path.join(model_cache.cache_dir, "predicted.tsv"), ""
             )
+            mlflow.log_artifacts(model.artifact_repo, "splc-logs")
+            mlflow.log_metric("learning_time", model.learning_time)
     except Exception as e:
         logging.error("During learning the following error occured: %s", e)
 
