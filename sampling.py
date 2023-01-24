@@ -47,7 +47,7 @@ def _sampling_params(local_vars, bin_method: str, num_method: str = None):
         "plackettburman": ["measurements", "level"],
         "kexchange": ["sampleSize", "k"],
         "twise": ["t"],
-        "distancebased": ["optionWeight", "numConfigs"],
+        "distance-based": ["optionWeight", "numConfigs"],
     }
     if num_method and num_method in param_dict:
         samp_params.update(
@@ -55,7 +55,7 @@ def _sampling_params(local_vars, bin_method: str, num_method: str = None):
         )
     if bin_method in param_dict:
         samp_params.update(
-            {param: local_vars[param.lower()] for param in param_dict[num_method]}
+            {param: local_vars[param.lower()] for param in param_dict[bin_method]}
         )
 
     return samp_params
@@ -117,6 +117,7 @@ def sample(
     numeric_method = None if numeric_method == "None" else numeric_method
     system_cache = CacheHandler(system_run_id, new_run=False)
     feature_model = system_cache.retrieve("fm.xml")
+
     data = system_cache.retrieve("measurements.tsv")
 
     params = _sampling_params(locals(), binary_method, numeric_method)
@@ -159,6 +160,7 @@ def sample(
         finally:
             if logs_to_artifact:
                 mlflow.log_artifact("logs.txt", "")
+            mlflow.log_artifacts(sampler.artifact_repo, "splc-logs")
 
 
 if __name__ == "__main__":
