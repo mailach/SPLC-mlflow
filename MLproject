@@ -13,7 +13,7 @@ entry_points:
       system_run_id: { type: string }
       binary_method: { type: string }
       numeric_method: { type: string, default: None }
-      logs_to_artifact: { type: bool, default: None }
+      logs_to_artifact: { type: bool, default: False }
       measurements: { type: int, default: None }
       level: { type: int, default: None }
       sampleSize: { type: int, default: None }
